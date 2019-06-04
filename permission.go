@@ -1,6 +1,7 @@
 package gorbac
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -73,4 +74,48 @@ func (p *LayerPermission) Match(a Permission) bool {
 		}
 	}
 	return true
+}
+
+func NewRESTPermission(action, path string) Permission {
+	return RESTPermission{
+		action: strings.ToUpper(action),
+		path:   strings.ToLower(path),
+	}
+}
+
+type RESTPermission struct {
+	action string
+	path   string
+}
+
+func (r RESTPermission) String() string {
+	return fmt.Sprintf("%v - %v", r.action, r.path)
+}
+
+func (r RESTPermission) ID() string {
+	return r.action + "|" + r.path
+}
+
+func (r RESTPermission) Match(p Permission) bool {
+	v := strings.Split(p.ID(), "|")
+	if len(v) < 2 {
+		return false
+	}
+	action, path := v[0], v[1]
+	if r.action == action || r.action == "ALL" {
+		return matchpath(path, r.path)
+	}
+	return false
+}
+
+func matchpath(q, s string) bool {
+	for q != s {
+		q = strings.TrimSuffix(q, "/*")
+		i := strings.LastIndex(q, "/")
+		if i < 0 {
+			break
+		}
+		q = q[:i] + "/*"
+	}
+	return q == s
 }
