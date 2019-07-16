@@ -93,17 +93,23 @@ func (r RESTPermission) String() string {
 }
 
 func (r RESTPermission) ID() string {
-	return r.action + "|" + r.path
+	return r.action + "<|>" + r.path
 }
 
 func (r RESTPermission) Match(p Permission) bool {
-	v := strings.Split(p.ID(), "|")
+	v := strings.Split(p.ID(), "<|>")
 	if len(v) < 2 {
 		return false
 	}
 	action, path := v[0], v[1]
-	if r.action == action || r.action == "ALL" {
+	if r.action == "ALL" {
 		return matchpath(path, r.path)
+	}
+	actions := strings.Split(r.action, "|")
+	for _, act := range actions {
+		if act == action {
+			return matchpath(path, r.path)
+		}
 	}
 	return false
 }
