@@ -108,7 +108,12 @@ func (r RESTPermission) Match(p Permission) bool {
 	actions := strings.Split(r.action, "|")
 	for _, act := range actions {
 		if act == action {
-			return matchpath(path, r.path)
+			paths := strings.Split(r.path, "|")
+			for _, p := range paths {
+				if matchpath(path, p) {
+					return true
+				}
+			}
 		}
 	}
 	return false
